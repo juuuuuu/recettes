@@ -11,6 +11,9 @@
         .filters input[type="text"] { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; min-width: 200px; font-size: 14px; }
         .filters input[type="text"]:focus { outline: none; border-color: #2c5aa0; }
         
+        #seasonFilter { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-width: 180px; cursor: pointer; }
+        #seasonFilter:focus { outline: none; border-color: #2c5aa0; }
+        
         .dropdown { position: relative; min-width: 250px; }
         .dropdown-trigger { 
             padding: 10px 12px; 
@@ -93,6 +96,14 @@
                 <ul class="dropdown-list" id="ingredientList"></ul>
             </div>
         </div>
+        
+        <select id="seasonFilter">
+            <option value="">Toutes les saisons</option>
+            <option value="Hiver">🥶 Hiver</option>
+            <option value="Printemps">🌱 Printemps</option>
+            <option value="Été">🌞 Été</option>
+            <option value="Automne">🍁 Automne</option>
+        </select>
     </div>
     
     <div id="count"></div>
@@ -147,11 +158,20 @@
                 return;
             }
             
+            const seasonEmojis = {
+                'Hiver': '🥶',
+                'Printemps': '🌱',
+                'Été': '🌞',
+                'Automne': '🍁',
+                'Toutes saisons': '🌍'
+            };
+
             recipes.forEach(recipe => {
                 const div = document.createElement('div');
                 div.className = 'recipe';
                 div.innerHTML = `
                     <h2>${recipe.title}</h2>
+                    <p class="season">${recipe.season ? seasonEmojis[recipe.season] + ' ' + recipe.season : ''}</p>
                     <p class="ingredients">
                         ${recipe.ingredients.map(i => `<span class="ingredient-tag" data-ingredient="${i}">${i}</span>`).join('')}
                     </p>
@@ -215,6 +235,7 @@
 
         function filterRecipes() {
             const titleQuery = normalize(document.getElementById('titleFilter').value);
+            const seasonQuery = document.getElementById('seasonFilter').value;
 
             const filtered = allRecipes.filter(recipe => {
                 const matchTitle = normalize(recipe.title).includes(titleQuery);
@@ -226,7 +247,12 @@
                     );
                 }
                 
-                return matchTitle && matchIngredients;
+                let matchSeason = true;
+                if (seasonQuery) {
+                    matchSeason = recipe.season === seasonQuery;
+                }
+                
+                return matchTitle && matchIngredients && matchSeason;
             });
 
             renderRecipes(filtered);
@@ -240,9 +266,10 @@
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 const title = row[0];
+                const season = row[row.length - 1];
                 const ingredients = [];
                 
-                for (let j = 1; j < row.length; j++) {
+                for (let j = 1; j < row.length - 1; j++) {
                     const ing = row[j];
                     if (ing && ing.trim()) {
                         ingredients.push(ing.trim());
@@ -252,7 +279,8 @@
                 
                 allRecipes.push({
                     title: title,
-                    ingredients: ingredients
+                    ingredients: ingredients,
+                    season: season
                 });
             }
             
@@ -272,6 +300,7 @@
             });
 
             document.getElementById('titleFilter').addEventListener('input', filterRecipes);
+            document.getElementById('seasonFilter').addEventListener('change', filterRecipes);
             
             const dropdown = document.getElementById('ingredientDropdown');
             const trigger = document.getElementById('dropdownTrigger');
