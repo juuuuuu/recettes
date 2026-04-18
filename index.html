@@ -75,6 +75,15 @@
         .ingredients span { background: #e8f4f8; padding: 3px 8px; border-radius: 4px; margin: 2px; display: inline-block; cursor: pointer; }
         .ingredients span:hover { background: #2c5aa0; color: white; }
         
+        #activeFilters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        #activeFilters .active-filter { 
+            background: #2c5aa0; color: white; padding: 6px 12px; 
+            border-radius: 20px; display: flex; align-items: center; gap: 6px; 
+            cursor: pointer; font-size: 14px;
+        }
+        #activeFilters .active-filter:hover { background: #1a4080; }
+        #activeFilters .active-filter .remove { font-weight: bold; }
+        
         #count { margin-bottom: 15px; color: #666; }
     </style>
 </head>
@@ -105,6 +114,8 @@
             <option value="Automne">🍁 Automne</option>
         </select>
     </div>
+    
+    <div id="activeFilters"></div>
     
     <div id="count"></div>
     <div id="recipes"></div>
@@ -213,7 +224,26 @@
                 selectedIngredients.delete(ing);
             }
             updateSelectedCount();
+            renderActiveFilters();
             filterRecipes();
+        }
+        
+        function renderActiveFilters() {
+            const container = document.getElementById('activeFilters');
+            container.innerHTML = '';
+            selectedIngredients.forEach(ing => {
+                const span = document.createElement('span');
+                span.className = 'active-filter';
+                span.innerHTML = `${ing} <span class="remove">✕</span>`;
+                span.addEventListener('click', () => {
+                    selectedIngredients.delete(ing);
+                    renderIngredientList(document.getElementById('ingredientSearch').value);
+                    updateSelectedCount();
+                    renderActiveFilters();
+                    filterRecipes();
+                });
+                container.appendChild(span);
+            });
         }
 
         function updateSelectedCount() {
@@ -294,6 +324,7 @@
                         selectedIngredients.add(ing);
                         renderIngredientList(document.getElementById('ingredientSearch').value);
                         updateSelectedCount();
+                        renderActiveFilters();
                         filterRecipes();
                     }
                 }
